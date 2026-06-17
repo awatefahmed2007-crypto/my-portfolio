@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FLORA — Rare Blooms & Living Art</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --greige: #E8E5E0;
+  --clay: #D9D3CA;
+  --ink: #1C1A17;
+  --ink-soft: #3A3632;
+  --muted: #8A857D;
+  --gold: #B5A48A;
+  --gold-dark: #8C7B62;
+  --white: #F7F5F2;
+  --serif: 'Cormorant Garamond', Georgia, serif;
+  --sans: 'DM Sans', system-ui, sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--greige);
+  color: var(--ink);
+  font-family: var(--sans);
+  overflow: hidden;
+  height: 100vh;
+  cursor: none;
+}
+
+/* ─── CUSTOM CURSOR ─── */
+#cursor {
+  position: fixed; width: 10px; height: 10px;
+  border-radius: 50%; background: var(--ink);
+  pointer-events: none; z-index: 9999;
+  transform: translate(-50%,-50%);
+  transition: width .3s, height .3s, background .3s;
+  mix-blend-mode: multiply;
+}
+#cursor-ring {
+  position: fixed; width: 36px; height: 36px;
+  border: 1px solid var(--ink-soft);
+  border-radius: 50%; pointer-events: none; z-index: 9998;
+  transform: translate(-50%,-50%);
+  transition: transform .15s ease, width .3s, height .3s, border-color .3s;
+  mix-blend-mode: multiply;
+}
+body:has(a:hover) #cursor, body:has(button:hover) #cursor { width: 6px; height: 6px; }
+body:has(a:hover) #cursor-ring, body:has(button:hover) #cursor-ring {
+  width: 52px; height: 52px; border-color: var(--gold);
+}
+
+/* ─── PROGRESS BAR ─── */
+#progress-line {
+  position: fixed; top: 0; left: 0;
+  height: 1px; background: var(--gold);
+  width: 0%; z-index: 1000;
+  transition: width .05s linear;
+}
+
+/* ─── PANEL COUNTER ─── */
+#panel-counter {
+  position: fixed; bottom: 40px; right: 52px;
+  font-family: var(--sans); font-size: 10px;
+  letter-spacing: 3px; color: var(--muted);
+  z-index: 1000;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+/* ─── NAV ─── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 500;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 32px 52px;
+  pointer-events: none;
+}
+.nav-logo {
+  font-family: var(--serif); font-size: 18px;
+  font-weight: 300; letter-spacing: 8px;
+  color: var(--ink); text-transform: uppercase;
+}
+.nav-tagline {
+  font-family: var(--sans); font-size: 9px;
+  letter-spacing: 4px; color: var(--muted);
+  text-transform: uppercase;
+}
+
+/* ─── SCROLL DRIVER ─── */
+#scroll-driver {
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 600vh;
+  pointer-events: none; z-index: -1;
+}
+
+/* ─── VIEWPORT & TRACK ─── */
+#viewport {
+  position: fixed; top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  overflow: hidden;
+}
+#h-track {
+  display: flex; flex-direction: row;
+  height: 100vh; width: max-content;
+  will-change: transform;
+}
+
+/* ─── PANELS ─── */
+.panel {
+  width: 100vw; height: 100vh;
+  flex-shrink: 0; position: relative;
+  display: flex; align-items: center;
+}
+
+/* ─── PANEL 1: HERO ─── */
+.panel-hero {
+  justify-content: center;
+  background: var(--greige);
+}
+.hero-inner { text-align: center; position: relative; z-index: 2; }
+.hero-eyebrow {
+  font-family: var(--sans); font-size: 9px;
+  letter-spacing: 7px; color: var(--gold-dark);
+  text-transform: uppercase; margin-bottom: 36px;
+  opacity: 0;
+}
+.hero-title {
+  font-family: var(--serif); font-size: clamp(72px, 12vw, 160px);
+  font-weight: 300; line-height: 0.88;
+  letter-spacing: -2px; color: var(--ink);
+}
+.hero-title em {
+  font-style: italic; color: var(--gold-dark);
+  display: block;
+}
+.hero-title span { display: block; opacity: 0; }
+.hero-sub {
+  font-family: var(--sans); font-size: 11px;
+  letter-spacing: 5px; color: var(--muted);
+  text-transform: uppercase; margin-top: 48px;
+  opacity: 0;
+}
+.hero-scroll-hint {
+  position: absolute; bottom: 48px; left: 50%;
+  transform: translateX(-50%);
+  display: flex; align-items: center; gap: 16px;
+  font-family: var(--sans); font-size: 9px;
+  letter-spacing: 4px; color: var(--muted);
+  text-transform: uppercase; opacity: 0;
+}
+.hint-line {
+  width: 40px; height: 1px;
+  background: var(--gold); flex-shrink: 0;
+}
+
+/* ─── FLORAL DECO (hero) ─── */
+.floral-ring {
+  position: absolute; top: 50%; left: 50%;
+  width: 480px; height: 480px;
+  border: 1px solid var(--clay);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+}
+.floral-ring-sm {
+  position: absolute; top: 50%; left: 50%;
+  width: 320px; height: 320px;
+  border: 1px solid var(--clay);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+}
+
+/* ─── DIVIDER PANEL ─── */
+.panel-divider {
+  width: 200px;
+  background: var(--greige);
+  justify-content: center;
+  align-items: center;
+}
+.vert-rule {
+  width: 1px; height: 0;
+  background: var(--clay);
+  margin: 0 auto;
+}
+
+/* ─── PRODUCT PANEL ─── */
+.panel-product {
+  width: 100vw;
+  background: var(--greige);
+  display: flex; align-items: center;
+  gap: 0;
+}
+.product-frame-col {
+  flex: 0 0 50vw;
+  height: 100vh;
+  display: flex; align-items: center;
+  justify-content: center;
+  padding: 80px;
+  position: relative;
+}
+.product-info-col {
+  flex: 0 0 50vw;
+  height: 100vh;
+  display: flex; flex-direction: column;
+  justify-content: center;
+  padding: 80px 80px 80px 60px;
+}
+
+/* Image mask frame */
+.img-frame {
+  width: 100%; max-width: 460px;
+  aspect-ratio: 3/4;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--clay);
+}
+.img-mask {
+  position: absolute; inset: 0;
+  clip-path: inset(100% 0% 0% 0%);
+}
+.img-mask img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transform: scale(1.12);
+  display: block;
+}
+.frame-corner {
+  position: absolute;
+  width: 20px; height: 20px;
+  border-color: var(--gold);
+  border-style: solid;
+  opacity: 0;
+}
+.corner-tl { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+.corner-tr { top: -1px; right: -1px; border-width: 2px 2px 0 0; }
+.corner-bl { bottom: -1px; left: -1px; border-width: 0 0 2px 2px; }
+.corner-br { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+.product-season {
+  font-family: var(--sans); font-size: 9px;
+  letter-spacing: 5px; color: var(--gold-dark);
+  text-transform: uppercase; margin-bottom: 24px;
+  opacity: 0;
+}
+.product-name {
+  font-family: var(--serif); font-size: clamp(36px, 4.5vw, 62px);
+  font-weight: 300; line-height: 1.05;
+  letter-spacing: -1px; color: var(--ink);
+  opacity: 0;
+}
+.product-name em { font-style: italic; }
+.product-divider {
+  width: 0; height: 1px;
+  background: var(--gold); margin: 36px 0;
+}
+.product-desc {
+  font-family: var(--sans); font-size: 13px;
+  line-height: 2; color: var(--muted);
+  max-width: 340px; opacity: 0;
+}
+.product-price {
+  font-family: var(--serif); font-size: 28px;
+  font-weight: 300; color: var(--ink);
+  margin-top: 40px; opacity: 0;
+}
+.product-price sup { font-size: 14px; vertical-align: super; margin-right: 2px; }
+.inquiry-btn {
+  margin-top: 32px;
+  display: inline-flex; align-items: center; gap: 12px;
+  font-family: var(--sans); font-size: 9px;
+  letter-spacing: 4px; color: var(--ink);
+  text-transform: uppercase; text-decoration: none;
+  background: none; border: none;
+  cursor: pointer;
+  opacity: 0;
+  transition: gap .3s;
+}
+.inquiry-btn:hover { gap: 20px; color: var(--gold-dark); }
+.inquiry-btn-line { width: 28px; height: 1px; background: currentColor; }
+
+/* ─── PANEL: STATEMENT ─── */
+.panel-statement {
+  background: var(--ink);
+  justify-content: center; align-items: center;
+}
+.statement-inner { text-align: center; padding: 0 80px; position: relative; }
+.statement-quote {
+  font-family: var(--serif); font-size: clamp(32px, 5vw, 68px);
+  font-weight: 300; font-style: italic;
+  color: var(--white); line-height: 1.2;
+  letter-spacing: -1px; opacity: 0;
+}
+.statement-attr {
+  font-family: var(--sans); font-size: 10px;
+  letter-spacing: 4px; color: var(--gold);
+  text-transform: uppercase; margin-top: 48px;
+  opacity: 0;
+}
+.stmt-ornament {
+  font-family: var(--serif); font-size: 120px;
+  color: rgba(181,164,138,0.1);
+  position: absolute; top: -20px; left: 50%;
+  transform: translateX(-50%);
+  line-height: 1; pointer-events: none;
+  font-style: italic;
+}
+
+/* ─── PANEL: SOCIAL / CTA ─── */
+.panel-cta {
+  background: var(--greige);
+  justify-content: center; align-items: center;
+}
+.cta-inner { text-align: center; }
+.cta-label {
+  font-family: var(--sans); font-size: 9px;
+  letter-spacing: 6px; color: var(--muted);
+  text-transform: uppercase; margin-bottom: 40px;
+  opacity: 0;
+}
+.cta-headline {
+  font-family: var(--serif); font-size: clamp(40px, 6vw, 80px);
+  font-weight: 300; color: var(--ink);
+  letter-spacing: -2px; line-height: 1;
+  opacity: 0;
+}
+.cta-headline em { font-style: italic; color: var(--gold-dark); }
+.social-buttons {
+  display: flex; gap: 20px;
+  justify-content: center; margin-top: 56px;
+}
+.social-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 28px;
+  font-family: var(--sans); font-size: 10px;
+  letter-spacing: 3px; text-transform: uppercase;
+  text-decoration: none; cursor: pointer;
+  transition: all .35s ease; opacity: 0;
+  border: none; background: none;
+}
+.social-btn-wa {
+  background: var(--ink); color: var(--white);
+}
+.social-btn-wa:hover {
+  background: var(--gold-dark); color: var(--white);
+}
+.social-btn-ig {
+  border: 1px solid var(--ink); color: var(--ink);
+}
+.social-btn-ig:hover {
+  background: var(--ink); color: var(--white);
+}
+.social-btn svg {
+  width: 14px; height: 14px;
+  fill: currentColor; flex-shrink: 0;
+}
+.cta-footnote {
+  font-family: var(--sans); font-size: 10px;
+  letter-spacing: 2px; color: var(--muted);
+  margin-top: 48px; opacity: 0;
+}
+
+/* ─── ADMIN TOGGLE ─── */
+#admin-toggle {
+  position: fixed; bottom: 40px; left: 52px;
+  font-family: var(--sans); font-size: 9px;
+  letter-spacing: 3px; color: var(--clay);
+  text-transform: uppercase; cursor: pointer;
+  background: none; border: none;
+  z-index: 1000;
+  transition: color .3s;
+}
+#admin-toggle:hover { color: var(--muted); }
+
+/* ─── ADMIN PANEL ─── */
+#admin-overlay {
+  position: fixed; inset: 0;
+  background: rgba(28,26,23,0.95);
+  z-index: 2000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+#admin-overlay.active { display: flex; }
+.admin-modal {
+  background: var(--white);
+  width: 520px; max-height: 90vh;
+  overflow-y: auto;
+  padding: 60px 52px;
+  position: relative;
+}
+.admin-close {
+  position: absolute; top: 24px; right: 28px;
+  background: none; border: none;
+  font-family: var(--sans); font-size: 9px;
+  letter-spacing: 3px; color: var(--muted);
+  text-transform: uppercase; cursor: pointer;
+}
+.admin-close:hover { color: var(--ink); }
+.admin-title {
+  font-family: var(--serif); font-size: 32px;
+  font-weight: 300; font-style: italic;
+  color: var(--ink); margin-bottom: 8px;
+}
+.admin-sub {
+  font-family: var(--sans); font-size: 10px;
+  letter-spacing: 3px; color: var(--muted);
+  text-transform: uppercase; margin-bottom: 48px;
+}
+.admin-login, .admin-form { display: none; }
+.admin-login.visible, .admin-form.visible { display: block; }
+
+.field-group { margin-bottom: 28px; }
+.field-label {
+  font-family: var(--sans); font-size: 9px;
+  letter-spacing: 4px; color: var(--muted);
+  text-transform: uppercase; display: block;
+  margin-bottom: 10px;
+}
+.field-input {
+  width: 100%;
+  border: none; border-bottom: 1px solid var(--clay);
+  background: transparent;
+  font-family: var(--sans); font-size: 14px;
+  color: var(--ink); padding: 10px 0;
+  outline: none;
+  transition: border-color .3s;
+}
+.field-input:focus { border-color: var(--gold-dark); }
+.field-input::placeholder { color: var(--clay); }
+
+.admin-btn {
+  width: 100%; padding: 16px;
+  background: var(--ink); color: var(--white);
+  border: none; cursor: pointer;
+  font-family: var(--sans); font-size: 10px;
+  letter-spacing: 4px; text-transform: uppercase;
+  margin-top: 16px;
+  transition: background .3s;
+}
+.admin-btn:hover { background: var(--gold-dark); }
+.admin-status {
+  font-family: var(--sans); font-size: 11px;
+  color: var(--gold-dark); margin-top: 16px;
+  letter-spacing: 1px; text-align: center;
+  min-height: 20px;
+}
+.admin-error {
+  font-family: var(--sans); font-size: 11px;
+  color: #9B4A4A; margin-top: 12px;
+  letter-spacing: 1px;
+}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<div id="progress-line"></div>
+<div id="panel-counter">01 — 07</div>
+
+<nav>
+  <div class="nav-logo">Flora</div>
+  <div class="nav-tagline">Rare Blooms &amp; Living Art</div>
+</nav>
+
+<div id="scroll-driver"></div>
+
+<div id="viewport">
+  <div id="h-track">
+
+    <!-- PANEL 1: HERO -->
+    <div class="panel panel-hero">
+      <canvas id="petals-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;"></canvas>
+      <div class="floral-ring" id="ring1"></div>
+      <div class="floral-ring-sm" id="ring2"></div>
+      <div class="hero-inner">
+        <p class="hero-eyebrow" id="hero-eyebrow">Atelier de Fleurs — Est. 2019</p>
+        <h1 class="hero-title">
+          <span id="ht1">Flowers</span>
+          <em id="ht2">as rare</em>
+          <span id="ht3">as you</span>
+        </h1>
+        <p class="hero-sub" id="hero-sub">Bespoke arrangements, composed in silence</p>
+      </div>
+      <div class="hero-scroll-hint" id="scroll-hint">
+        <div class="hint-line"></div>
+        <span>Scroll to explore</span>
+        <div class="hint-line"></div>
+      </div>
+    </div>
+
+    <!-- DIVIDER -->
+    <div class="panel panel-divider">
+      <div class="vert-rule" id="rule1"></div>
+    </div>
+
+    <!-- PANEL 2: PRODUCT — Aube Dorée -->
+    <div class="panel panel-product" id="panel-p1">
+      <div class="product-frame-col">
+        <div class="img-frame" id="frame1">
+          <div class="img-mask" id="mask1">
+            <img src="https://images.unsplash.com/photo-1487530811015-780aaceefa8d?w=900&q=80" alt="Aube Dorée arrangement">
+          </div>
+          <div class="frame-corner corner-tl" id="fc1-tl"></div>
+          <div class="frame-corner corner-tr" id="fc1-tr"></div>
+          <div class="frame-corner corner-bl" id="fc1-bl"></div>
+          <div class="frame-corner corner-br" id="fc1-br"></div>
+        </div>
+      </div>
+      <div class="product-info-col">
+        <p class="product-season" id="p1-season">Spring — Limited Edition</p>
+        <h2 class="product-name" id="p1-name">Aube<br><em>Dorée</em></h2>
+        <div class="product-divider" id="p1-div"></div>
+        <p class="product-desc" id="p1-desc">A golden dawn composition of Garden Roses, Ranunculus, and Gypsophila — arranged to evoke the first light of a Provençal morning. Each stem selected by hand.</p>
+        <p class="product-price" id="p1-price"><sup>KD</sup>45.000</p>
+        <a href="https://wa.me/+965XXXXXXXX?text=Inquiry%20about%20Aube%20Dor%C3%A9e" target="_blank" class="inquiry-btn" id="p1-btn">
+          <span class="inquiry-btn-line"></span>
+          Inquire via WhatsApp
+        </a>
+      </div>
+    </div>
+
+    <!-- PANEL 3: PRODUCT — Nuit Blanche -->
+    <div class="panel panel-product" id="panel-p2">
+      <div class="product-frame-col">
+        <div class="img-frame" id="frame2">
+          <div class="img-mask" id="mask2">
+            <img src="https://images.unsplash.com/photo-1490750967868-88df5691cc19?w=900&q=80" alt="Nuit Blanche arrangement">
+          </div>
+          <div class="frame-corner corner-tl" id="fc2-tl"></div>
+          <div class="frame-corner corner-tr" id="fc2-tr"></div>
+          <div class="frame-corner corner-bl" id="fc2-bl"></div>
+          <div class="frame-corner corner-br" id="fc2-br"></div>
+        </div>
+      </div>
+      <div class="product-info-col">
+        <p class="product-season" id="p2-season">All Season — Signature</p>
+        <h2 class="product-name" id="p2-name">Nuit<br><em>Blanche</em></h2>
+        <div class="product-divider" id="p2-div"></div>
+        <p class="product-desc" id="p2-desc">Pure white Peonies, Snow Lisianthus, and White Garden Roses — a study in restrained elegance. Wrapped in unbleached linen and sealed with natural raffia.</p>
+        <p class="product-price" id="p2-price"><sup>KD</sup>62.000</p>
+        <a href="https://wa.me/+965XXXXXXXX?text=Inquiry%20about%20Nuit%20Blanche" target="_blank" class="inquiry-btn" id="p2-btn">
+          <span class="inquiry-btn-line"></span>
+          Inquire via WhatsApp
+        </a>
+      </div>
+    </div>
+
+    <!-- PANEL 4: STATEMENT -->
+    <div class="panel panel-statement" id="panel-stmt">
+      <div class="statement-inner">
+        <div class="stmt-ornament">"</div>
+        <p class="statement-quote" id="stmt-q">A flower is not a decoration.<br>It is a conversation<br><em>between nature and the soul.</em></p>
+        <p class="statement-attr" id="stmt-a">— Flora Atelier</p>
+      </div>
+    </div>
+
+    <!-- PANEL 5: PRODUCT — La Sauvage -->
+    <div class="panel panel-product" id="panel-p3">
+      <div class="product-frame-col">
+        <div class="img-frame" id="frame3">
+          <div class="img-mask" id="mask3">
+            <img src="https://images.unsplash.com/photo-1559563362-c667ba5f5480?w=900&q=80" alt="La Sauvage arrangement">
+          </div>
+          <div class="frame-corner corner-tl" id="fc3-tl"></div>
+          <div class="frame-corner corner-tr" id="fc3-tr"></div>
+          <div class="frame-corner corner-bl" id="fc3-bl"></div>
+          <div class="frame-corner corner-br" id="fc3-br"></div>
+        </div>
+      </div>
+      <div class="product-info-col">
+        <p class="product-season" id="p3-season">Autumn — Bespoke</p>
+        <h2 class="product-name" id="p3-name">La<br><em>Sauvage</em></h2>
+        <div class="product-divider" id="p3-div"></div>
+        <p class="product-desc" id="p3-desc">Wild-gathered Dahlias, Cosmos, and dried Pampas arranged in the style of found natural beauty — untamed yet precise. A statement for those who prefer the raw to the refined.</p>
+        <p class="product-price" id="p3-price"><sup>KD</sup>38.000</p>
+        <a href="https://wa.me/+965XXXXXXXX?text=Inquiry%20about%20La%20Sauvage" target="_blank" class="inquiry-btn" id="p3-btn">
+          <span class="inquiry-btn-line"></span>
+          Inquire via WhatsApp
+        </a>
+      </div>
+    </div>
+
+    <!-- PANEL 6: CTA / SOCIAL -->
+    <div class="panel panel-cta" id="panel-cta">
+      <div class="cta-inner">
+        <p class="cta-label" id="cta-label">Commission a piece</p>
+        <h2 class="cta-headline" id="cta-h">Every bloom,<br><em>a conversation.</em></h2>
+        <div class="social-buttons">
+          <a href="https://wa.me/+965XXXXXXXX" target="_blank" class="social-btn social-btn-wa" id="btn-wa">
+            <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            WhatsApp
+          </a>
+          <a href="https://instagram.com/" target="_blank" class="social-btn social-btn-ig" id="btn-ig">
+            <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+            Instagram
+          </a>
+        </div>
+        <p class="cta-footnote" id="cta-foot">Kuwait City &nbsp;·&nbsp; By appointment only &nbsp;·&nbsp; info@flora-atelier.com</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ADMIN TOGGLE -->
+<button id="admin-toggle" onclick="openAdmin()">⬡ Admin</button>
+
+<!-- ADMIN OVERLAY -->
+<div id="admin-overlay">
+  <div class="admin-modal">
+    <button class="admin-close" onclick="closeAdmin()">Close ✕</button>
+
+    <!-- LOGIN -->
+    <div class="admin-login visible" id="admin-login">
+      <p class="admin-title">Atelier</p>
+      <p class="admin-sub">Admin Access</p>
+      <div class="field-group">
+        <label class="field-label" for="passcode-input">Passcode</label>
+        <input class="field-input" type="password" id="passcode-input" placeholder="Enter passcode" autocomplete="off">
+        <p class="admin-error" id="login-error"></p>
+      </div>
+      <button class="admin-btn" onclick="checkPass()">Enter Studio</button>
+    </div>
+
+    <!-- PRODUCT FORM -->
+    <div class="admin-form" id="admin-form">
+      <p class="admin-title">New Bloom</p>
+      <p class="admin-sub">Add to Collection</p>
+      <div class="field-group">
+        <label class="field-label" for="f-name">Product Name</label>
+        <input class="field-input" type="text" id="f-name" placeholder="e.g. Rose d'Or">
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="f-season">Season / Label</label>
+        <input class="field-input" type="text" id="f-season" placeholder="e.g. Winter — Limited">
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="f-price">Price (KD)</label>
+        <input class="field-input" type="text" id="f-price" placeholder="e.g. 55.000">
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="f-desc">Description</label>
+        <textarea class="field-input" id="f-desc" rows="3" placeholder="Describe the arrangement..."></textarea>
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="f-img">Image URL</label>
+        <input class="field-input" type="url" id="f-img" placeholder="https://...">
+      </div>
+      <button class="admin-btn" onclick="addProduct()">Save Product &rarr;</button>
+      <p class="admin-status" id="admin-status"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+gsap.registerPlugin(ScrollTrigger);
+
+// ─── CURSOR
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+let mx = 0, my = 0, rx = 0, ry = 0;
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+(function animCursor() {
+  rx += (mx - rx) * 0.12;
+  ry += (my - ry) * 0.12;
+  cursor.style.left = mx + 'px'; cursor.style.top = my + 'px';
+  ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+  requestAnimationFrame(animCursor);
+})();
+
+// ─── TRACK METRICS
+const track = document.getElementById('h-track');
+let productCount = 3;
+const PASS = 'flora2025';
+
+function getScrollAmt() { return -(track.scrollWidth - window.innerWidth); }
+
+// ─── MAIN HORIZONTAL SCROLL TIMELINE
+const mainTL = gsap.timeline({
+  scrollTrigger: {
+    trigger: '#scroll-driver',
+    start: 'top top',
+    end: 'bottom bottom',
+    scrub: 1.4,
+    onUpdate: self => {
+      document.getElementById('progress-line').style.width = (self.progress * 100) + '%';
+      const panels = track.querySelectorAll('.panel');
+      const idx = Math.min(panels.length, Math.max(1, Math.round(self.progress * panels.length) + 1));
+      document.getElementById('panel-counter').textContent =
+        String(idx).padStart(2,'0') + ' — ' + String(panels.length).padStart(2,'0');
+    }
+  }
+});
+mainTL.to(track, { x: () => getScrollAmt(), ease: 'none' });
+
+// ─── HERO ENTRANCE
+const heroTL = gsap.timeline({ delay: 0.3 });
+heroTL
+  .from('#ring1', { opacity: 0, scale: 0.85, duration: 2, ease: 'power2.out' })
+  .from('#ring2', { opacity: 0, scale: 0.7, duration: 1.8, ease: 'power2.out' }, '-=1.6')
+  .to('#hero-eyebrow', { opacity: 1, y: 0, duration: 1, ease: 'power3.out' }, '-=1')
+  .to('#ht1', { opacity: 1, y: 0, duration: 1, ease: 'power3.out' }, '-=0.6')
+  .to('#ht2', { opacity: 1, y: 0, duration: 1, ease: 'power3.out' }, '-=0.7')
+  .to('#ht3', { opacity: 1, y: 0, duration: 1, ease: 'power3.out' }, '-=0.7')
+  .to('#hero-sub', { opacity: 1, y: 0, duration: 1, ease: 'power3.out' }, '-=0.5')
+  .to('#scroll-hint', { opacity: 1, duration: 1.2, ease: 'power2.out' }, '-=0.3');
+
+gsap.set(['#ht1','#ht2','#ht3','#hero-sub','#hero-eyebrow'], { y: 24 });
+
+// ─── VERTICAL RULE ANIMATION
+gsap.to('#rule1', {
+  height: '40vh',
+  ease: 'none',
+  scrollTrigger: {
+    trigger: '#scroll-driver',
+    start: '3% top', end: '12% top',
+    scrub: 1.5
+  }
+});
+
+// ─── PRODUCT PANEL REVEAL FN
+function revealProduct(panelId, triggerStart, ids) {
+  const base = triggerStart;
+
+  // mask reveal
+  gsap.to(ids.mask, {
+    clipPath: 'inset(0% 0% 0% 0%)',
+    ease: 'expo.inOut', duration: 1.4,
+    scrollTrigger: {
+      trigger: '#scroll-driver',
+      start: base + '% top',
+      end: (base + 8) + '% top',
+      scrub: 1.6
+    }
+  });
+
+  // image scale down as it reveals
+  gsap.to(ids.mask + ' img', {
+    scale: 1, ease: 'none',
+    scrollTrigger: {
+      trigger: '#scroll-driver',
+      start: base + '% top',
+      end: (base + 10) + '% top',
+      scrub: 2
+    }
+  });
+
+  // corners
+  [ids.tl, ids.tr, ids.bl, ids.br].forEach((c, i) => {
+    gsap.to(c, {
+      opacity: 1,
+      delay: i * 0.05,
+      ease: 'power2.out',
+      scrollTrigger: {
+        trigger: '#scroll-driver',
+        start: (base + 4) + '% top',
+        end: (base + 8) + '% top',
+        scrub: 1
+      }
+    });
+  });
+
+  // text stagger
+  const textEls = [ids.season, ids.name, ids.divider, ids.desc, ids.price, ids.btn];
+  textEls.forEach((el, i) => {
+    if (el === ids.divider) {
+      gsap.to(el, {
+        width: '40px', ease: 'power2.inOut',
+        scrollTrigger: {
+          trigger: '#scroll-driver',
+          start: (base + 5 + i * 1.2) + '% top',
+          end: (base + 8 + i * 1.2) + '% top',
+          scrub: 1.5
+        }
+      });
+    } else {
+      gsap.set(el, { y: 18 });
+      gsap.to(el, {
+        opacity: 1, y: 0, ease: 'power3.out',
+        scrollTrigger: {
+          trigger: '#scroll-driver',
+          start: (base + 5 + i * 1.2) + '% top',
+          end: (base + 9 + i * 1.2) + '% top',
+          scrub: 1.5
+        }
+      });
+    }
+  });
+}
+
+revealProduct('panel-p1', 14, {
+  mask: '#mask1', tl: '#fc1-tl', tr: '#fc1-tr', bl: '#fc1-bl', br: '#fc1-br',
+  season: '#p1-season', name: '#p1-name', divider: '#p1-div',
+  desc: '#p1-desc', price: '#p1-price', btn: '#p1-btn'
+});
+
+revealProduct('panel-p2', 31, {
+  mask: '#mask2', tl: '#fc2-tl', tr: '#fc2-tr', bl: '#fc2-bl', br: '#fc2-br',
+  season: '#p2-season', name: '#p2-name', divider: '#p2-div',
+  desc: '#p2-desc', price: '#p2-price', btn: '#p2-btn'
+});
+
+revealProduct('panel-p3', 62, {
+  mask: '#mask3', tl: '#fc3-tl', tr: '#fc3-tr', bl: '#fc3-bl', br: '#fc3-br',
+  season: '#p3-season', name: '#p3-name', divider: '#p3-div',
+  desc: '#p3-desc', price: '#p3-price', btn: '#p3-btn'
+});
+
+// ─── STATEMENT
+gsap.set('#stmt-q', { y: 28 });
+gsap.to('#stmt-q', {
+  opacity: 1, y: 0, ease: 'power3.out',
+  scrollTrigger: {
+    trigger: '#scroll-driver',
+    start: '47% top', end: '54% top', scrub: 1.5
+  }
+});
+gsap.to('#stmt-a', {
+  opacity: 1, ease: 'power2.out',
+  scrollTrigger: {
+    trigger: '#scroll-driver',
+    start: '50% top', end: '55% top', scrub: 1
+  }
+});
+
+// ─── CTA PANEL
+['#cta-label','#cta-h','#btn-wa','#btn-ig','#cta-foot'].forEach((el, i) => {
+  gsap.set(el, { y: 16 });
+  gsap.to(el, {
+    opacity: 1, y: 0, ease: 'power3.out',
+    scrollTrigger: {
+      trigger: '#scroll-driver',
+      start: (80 + i * 2) + '% top',
+      end: (84 + i * 2) + '% top',
+      scrub: 1.5
+    }
+  });
+});
+
+// ─── ADMIN
+function openAdmin() {
+  document.getElementById('admin-overlay').classList.add('active');
+  document.getElementById('passcode-input').focus();
+}
+function closeAdmin() {
+  document.getElementById('admin-overlay').classList.remove('active');
+  document.getElementById('login-error').textContent = '';
+  document.getElementById('passcode-input').value = '';
+}
+document.getElementById('passcode-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkPass();
+});
+
+function checkPass() {
+  const val = document.getElementById('passcode-input').value;
+  if (val === PASS) {
+    document.getElementById('admin-login').classList.remove('visible');
+    document.getElementById('admin-form').classList.add('visible');
+    document.getElementById('login-error').textContent = '';
+  } else {
+    document.getElementById('login-error').textContent = 'Incorrect passcode.';
+    document.getElementById('passcode-input').value = '';
+    document.getElementById('passcode-input').focus();
+  }
+}
+
+function addProduct() {
+  const name = document.getElementById('f-name').value.trim();
+  const season = document.getElementById('f-season').value.trim();
+  const price = document.getElementById('f-price').value.trim();
+  const desc = document.getElementById('f-desc').value.trim();
+  const img = document.getElementById('f-img').value.trim();
+
+  if (!name || !price || !img) {
+    document.getElementById('admin-status').textContent = 'Please fill Name, Price, and Image URL.';
+    document.getElementById('admin-status').style.color = '#9B4A4A';
+    return;
+  }
+
+  productCount++;
+  const pid = 'dyn-p' + productCount;
+  const maskId = 'dyn-mask' + productCount;
+  const frameId = 'dyn-frame' + productCount;
+
+  // Build new panel HTML
+  const newPanel = document.createElement('div');
+  newPanel.className = 'panel panel-product';
+  newPanel.id = pid;
+  newPanel.innerHTML = `
+    <div class="product-frame-col">
+      <div class="img-frame" id="${frameId}">
+        <div class="img-mask" id="${maskId}" style="clip-path: inset(100% 0% 0% 0%);">
+          <img src="${img}" alt="${name}" style="transform: scale(1.12);">
+        </div>
+        <div class="frame-corner corner-tl" id="${pid}-tl"></div>
+        <div class="frame-corner corner-tr" id="${pid}-tr"></div>
+        <div class="frame-corner corner-bl" id="${pid}-bl"></div>
+        <div class="frame-corner corner-br" id="${pid}-br"></div>
+      </div>
+    </div>
+    <div class="product-info-col">
+      <p class="product-season" id="${pid}-season" style="opacity:0;">${season || 'New Arrival'}</p>
+      <h2 class="product-name" id="${pid}-name" style="opacity:0;">${name}</h2>
+      <div class="product-divider" id="${pid}-div" style="width:0;"></div>
+      <p class="product-desc" id="${pid}-desc" style="opacity:0;">${desc || ''}</p>
+      <p class="product-price" id="${pid}-price" style="opacity:0;"><sup>KD</sup>${price}</p>
+      <a href="https://wa.me/+965XXXXXXXX?text=Inquiry%20about%20${encodeURIComponent(name)}" target="_blank" class="inquiry-btn" id="${pid}-btn" style="opacity:0;">
+        <span class="inquiry-btn-line"></span>
+        Inquire via WhatsApp
+      </a>
+    </div>`;
+
+  // Insert before CTA panel
+  const ctaPanel = document.getElementById('panel-cta');
+  track.insertBefore(newPanel, ctaPanel);
+
+  // Refresh GSAP ScrollTrigger so new width is recognized
+  ScrollTrigger.refresh();
+  mainTL.invalidate();
+
+  // Entrance animation for the new panel (immediate, since it's injected at end of track)
+  gsap.to(`#${maskId}`, {
+    clipPath: 'inset(0% 0% 0% 0%)',
+    duration: 1.6, ease: 'expo.inOut', delay: 0.3
+  });
+  gsap.to(`#${maskId} img`, { scale: 1, duration: 2, ease: 'power2.out', delay: 0.3 });
+
+  const corners = [`#${pid}-tl`, `#${pid}-tr`, `#${pid}-bl`, `#${pid}-br`];
+  corners.forEach((c, i) => gsap.to(c, { opacity: 1, delay: 1 + i * 0.08, duration: 0.6, ease: 'power2.out' }));
+
+  const texts = [
+    `#${pid}-season`, `#${pid}-name`, `#${pid}-desc`, `#${pid}-price`, `#${pid}-btn`
+  ];
+  texts.forEach((el, i) => {
+    gsap.set(el, { y: 16 });
+    gsap.to(el, { opacity: 1, y: 0, duration: 0.8, delay: 1.2 + i * 0.12, ease: 'power3.out' });
+  });
+  gsap.to(`#${pid}-div`, { width: '40px', duration: 0.6, delay: 1.4, ease: 'power2.inOut' });
+
+  // Scroll to new panel
+  setTimeout(() => {
+    const scrollEl = document.documentElement;
+    const totalScroll = scrollEl.scrollHeight - window.innerHeight;
+    // Approximate scroll position for new panel
+    const totalPanels = track.querySelectorAll('.panel').length;
+    const newPanelIndex = totalPanels - 2; // before cta
+    const targetScroll = (newPanelIndex / totalPanels) * totalScroll * 0.92;
+    window.scrollTo({ top: targetScroll, behavior: 'smooth' });
+  }, 400);
+
+  // Reset form
+  ['f-name','f-season','f-price','f-desc','f-img'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  const status = document.getElementById('admin-status');
+  status.style.color = 'var(--gold-dark)';
+
+  status.textContent = `"${name}" has been added to the collection.`;
+  setTimeout(() => { status.textContent = ''; }, 4000);
+}
+
+// ─── WINDOW RESIZE
+window.addEventListener('resize', () => {
+  ScrollTrigger.refresh();
+  mainTL.invalidate();
+});
+
+// ─── ROSE PETALS CANVAS
+(function() {
+  const canvas = document.getElementById('petals-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, petals = [], animId;
+
+  function resize() {
+    W = canvas.width = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Petal colors — soft rose, blush, ivory, warm gold
+  const COLORS = [
+    'rgba(220,168,165,',
+    'rgba(232,196,192,',
+    'rgba(215,145,148,',
+    'rgba(240,220,210,',
+    'rgba(200,130,130,',
+    'rgba(181,164,138,',
+    'rgba(245,230,220,'
+  ];
+
+  function Petal() {
+    this.reset(true);
+  }
+  Petal.prototype.reset = function(init) {
+    this.x = Math.random() * W;
+    this.y = init ? Math.random() * H * 1.5 - H * 0.5 : -60;
+    this.size = 8 + Math.random() * 18;
+    this.speedY = 0.4 + Math.random() * 0.9;
+    this.speedX = (Math.random() - 0.5) * 0.7;
+    this.rot = Math.random() * Math.PI * 2;
+    this.rotSpeed = (Math.random() - 0.5) * 0.022;
+    this.sway = Math.random() * Math.PI * 2;
+    this.swayAmp = 0.3 + Math.random() * 0.7;
+    this.swaySpeed = 0.006 + Math.random() * 0.012;
+    this.alpha = 0.35 + Math.random() * 0.5;
+    this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+    this.scaleX = 0.55 + Math.random() * 0.45;
+  };
+
+  Petal.prototype.draw = function() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.rot);
+    ctx.scale(this.scaleX, 1);
+    ctx.beginPath();
+    // Organic petal shape using bezier curves
+    const s = this.size;
+    ctx.moveTo(0, -s);
+    ctx.bezierCurveTo(s * 0.8, -s * 0.6, s * 0.9, s * 0.3, 0, s * 0.7);
+    ctx.bezierCurveTo(-s * 0.9, s * 0.3, -s * 0.8, -s * 0.6, 0, -s);
+    ctx.fillStyle = this.color + this.alpha + ')';
+    ctx.fill();
+    // Subtle vein
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 0.7);
+    ctx.lineTo(0, s * 0.5);
+    ctx.strokeStyle = this.color + (this.alpha * 0.25) + ')';
+    ctx.lineWidth = 0.6;
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  Petal.prototype.update = function() {
+    this.sway += this.swaySpeed;
+    this.x += this.speedX + Math.sin(this.sway) * this.swayAmp;
+    this.y += this.speedY;
+    this.rot += this.rotSpeed;
+    if (this.y > H + 60) this.reset(false);
+  };
+
+  // Spawn 55 petals
+  for (let i = 0; i < 55; i++) petals.push(new Petal());
+
+  let heroPanelVisible = true;
+  ScrollTrigger.create({
+    trigger: '#scroll-driver',
+    start: '8% top',
+    onEnter: () => { heroPanelVisible = false; },
+    onLeaveBack: () => { heroPanelVisible = true; }
+  });
+
+  function loop() {
+    animId = requestAnimationFrame(loop);
+    ctx.clearRect(0, 0, W, H);
+    if (!heroPanelVisible) return;
+    petals.forEach(p => { p.update(); p.draw(); });
+  }
+  loop();
+})();
+</script>
+</body>
+</html>
